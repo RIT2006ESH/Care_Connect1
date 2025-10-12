@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🩺 Care Connect
 
 A **modern healthcare management web app** that connects **patients, doctors, and admins** on one unified platform.
@@ -168,3 +169,6 @@ git commit -m "Added new feature"
 git push origin feature-name
 
     
+=======
+# Care_Connect1
+>>>>>>> c813841df52b9605f0dee3ec82261412ff049e67

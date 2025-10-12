@@ -12,7 +12,12 @@ const DoctorDashboard = () => {
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [patients, setPatients] = useState([]);
   const [currentSection, setCurrentSection] = useState("appointments");
-  const [setCurrentDateTime] = useState(new Date());
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+useEffect(() => {
+  const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
+  return () => clearInterval(timer);
+}, []);
   const [isModalOpen, setModalOpen] = useState({
     markComplete: false,
     prescription: false,

@@ -40,7 +40,7 @@ const Navbar = ({ theme, toggleTheme }) => {
               <Link to="/symptom-checker">Symptom Checker</Link>
             </li>
             <li>
-              <Link to="http://127.0.0.1:5000/  ">Health Notices</Link>
+              <Link to="http://127.0.0.1:5001  ">Health Notices</Link>
             </li>
           </>
         </ul>

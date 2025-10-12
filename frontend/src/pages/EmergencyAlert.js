@@ -4,7 +4,7 @@ function EmergencyAlert() {
   const [statusText, setStatusText] = useState('Ready to send emergency alert');
   const [locationInfo, setLocationInfo] = useState('');
 
-  const EMERGENCY_NUMBER = '8262975733';
+  const EMERGENCY_NUMBER = '9987357067';
 
   const getLocationAndAlert = () => {
     setStatusText('Getting your location...');

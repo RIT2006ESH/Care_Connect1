@@ -142,7 +142,7 @@ const Home = () => {
               </div>
               <h3>Health Notices</h3>
               <p>Stay updated with government advisories and health tips...</p>
-              <Link to="/health-notices">
+              <Link to="http://127.0.0.1:5001/">
                 <button className="btn btn-primary">View Notices</button>
               </Link>
             </div>
