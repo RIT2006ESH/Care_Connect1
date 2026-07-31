@@ -8,9 +8,15 @@ Care Connect is a healthcare web application with:
 
 ## Project Structure
 
-- `frontend/` - React application (runs on `http://localhost:3000`)
-- `ml_backend/` - Disease prediction API (runs on `http://localhost:5000`)
-- `health notices/` - Health notices web service (runs on `http://127.0.0.1:5001`)
+- Target structure:
+  - `apps/frontend/` - React application
+  - `services/ml-backend/` - Disease prediction API
+  - `services/health-notices/` - Health notices service
+  - `third-party/mirotalkc2c-main/` - Isolated external project
+- Current legacy folders:
+  - `frontend/`
+  - `ml_backend/`
+  - `health notices/`
 
 ## Prerequisites
 
@@ -29,7 +35,7 @@ python --version
 
 ## 1) Start the Frontend (React)
 
-Open a terminal in the project root and run:
+Open a terminal in the current frontend folder and run:
 
 ```bash
 cd frontend
@@ -43,7 +49,7 @@ Frontend URL:
 
 ## 2) Start the ML Backend (Disease Predictor API)
 
-Open a second terminal in the project root and run:
+Open a second terminal in the current backend folder and run:
 
 ```bash
 cd ml_backend
@@ -80,10 +86,10 @@ Health endpoint:
 
 ## 3) Start Health Notices Service (Optional but used by links)
 
-Open a third terminal in the project root and run:
+Open a third terminal in the current health notices folder and run:
 
 ```bash
-cd "health notices"
+cd health-notices
 ```
 
 ### Create and activate virtual environment (first time only)
@@ -117,7 +123,7 @@ Use 3 terminals:
 
 1. Frontend: `frontend` -> `npm start`
 2. ML backend: `ml_backend` -> `python app.py`
-3. Health notices: `health notices` -> `python src\\frontend.py`
+3. Health notices: `health-notices` -> `python src\\frontend.py`
 
 ## Common Issues
 
@@ -152,17 +158,16 @@ This usually means the command or path is invalid for the current shell.
   - or open Command Prompt/PowerShell and use `C:\Users\Asus\Desktop\Care-Connect`
 - Run install commands from the correct folder:
   - `ml_backend` for ML backend dependencies
-  - `health notices` for `requirements.txt`
+  - `health-notices` for `requirements.txt`
 
 Example for health notices (Git Bash):
 
 ```bash
-cd /c/Users/Asus/Desktop/Care-Connect/health\ notices
+cd /c/Users/Asus/Desktop/Care-Connect/health-notices
 python -m pip install -r requirements.txt
 python src/frontend.py
 ```
 
 ## Notes
 
-- The frontend reads Supabase keys from `frontend/.env`:
 - The frontend no longer depends on Supabase.

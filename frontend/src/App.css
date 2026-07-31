@@ -1,3 +1,23 @@
+/* App shell spacing */
+.app-shell {
+  min-height: calc(100vh - 140px);
+  padding-top: 88px;
+}
+
+.app-shell--full {
+  min-height: 100vh;
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  .app-shell {
+    padding-top: 76px;
+  }
+
+  .app-shell--full {
+    padding-top: 0;
+  }
+}
 /* Navbar Styles */
 .navbar {
   background-color: var(--white);

@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import './Navbar.css'
+import { useAuth } from "../auth/AuthContext";
 const Navbar = ({ theme, toggleTheme }) => {
   const [isMenuOpen] = useState(false);
   const navbarRef = useRef(null);
   const navigate = useNavigate();
+  const { isAuthenticated, user, signOut } = useAuth();
   useEffect(() => {
     const handleScroll = () => {
       if (navbarRef.current) {
@@ -20,6 +22,11 @@ const Navbar = ({ theme, toggleTheme }) => {
   }, []);
   const handleLoginClick = () => {
     navigate("/auth");
+  };
+
+  const handleLogoutClick = () => {
+    signOut();
+    navigate("/");
   };
   return (
     <nav className="navbar" ref={navbarRef}>
@@ -40,7 +47,7 @@ const Navbar = ({ theme, toggleTheme }) => {
               <Link to="/symptom-checker">Symptom Checker</Link>
             </li>
             <li>
-              <Link to="http://127.0.0.1:5001  ">Health Notices</Link>
+              <Link to="http://127.0.0.1:5001/">Health Notices</Link>
             </li>
           </>
         </ul>
@@ -50,12 +57,18 @@ const Navbar = ({ theme, toggleTheme }) => {
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <span style={{ color: "var(--text)", fontWeight: "500" }}>
-              Welcome
+              {isAuthenticated ? `Welcome, ${user?.name?.split(" ")[0] || "User"}` : "Welcome"}
             </span>
           </div>
-          <button className="btn btn-primary" onClick={handleLoginClick}>
-            Login / Sign Up
-          </button>
+          {isAuthenticated ? (
+            <button className="btn btn-primary" onClick={handleLogoutClick}>
+              Logout
+            </button>
+          ) : (
+            <button className="btn btn-primary" onClick={handleLoginClick}>
+              Login / Sign Up
+            </button>
+          )}
         </div>
       </div>
     </nav>

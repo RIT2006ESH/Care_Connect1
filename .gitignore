@@ -136,6 +136,26 @@ ipch/
 # Visual Studio Trace Files
 *.e2e
 
+# Project-specific ignores
+**/node_modules/
+**/build/
+**/dist/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/venv/
+**/.venv/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+*.log
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # TFS 2012 Local Workspace
 $tf/
 

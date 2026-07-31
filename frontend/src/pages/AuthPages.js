@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getDashboardPathForRole } from "../auth/authStorage";
+import { useAuth } from "../auth/AuthContext";
 
 function AuthPages() {
   const navigate = useNavigate();
-
+  const { session, signIn, signUp } = useAuth();
   const [isSignIn, setIsSignIn] = useState(true);
   const [currentRole, setCurrentRole] = useState("user");
   const [formData, setFormData] = useState({
@@ -18,21 +20,31 @@ function AuthPages() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
 
+  const demoCredentials = useMemo(
+    () => [
+      { role: "user", email: "jane@example.com", password: "Password123!" },
+      { role: "doctor", email: "doctor@example.com", password: "Password123!" },
+      { role: "admin", email: "admin@example.com", password: "Password123!" },
+    ],
+    []
+  );
+
+  useEffect(() => {
+    if (session) {
+      navigate(getDashboardPathForRole(session.role), { replace: true });
+    }
+  }, [navigate, session]);
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: type === "checkbox" ? checked : value,
-    });
-    setError(""); // Clear error on input change
+    }));
+    setError("");
   };
 
-  const handleSubmit = () => {
-    navigate("/");
-  };
-
-  const toggleAuthMode = () => {
-    setIsSignIn(!isSignIn);
+  const resetForm = () => {
     setFormData({
       name: "",
       email: "",
@@ -41,94 +53,235 @@ function AuthPages() {
       phone: "",
       agreeToTerms: false,
     });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    try {
+      if (!formData.email || !formData.password) {
+        throw new Error("Email and password are required.");
+      }
+
+      if (!isSignIn) {
+        if (!formData.name.trim()) {
+          throw new Error("Full name is required for sign up.");
+        }
+        if (formData.password.length < 8) {
+          throw new Error("Password must be at least 8 characters long.");
+        }
+        if (formData.password !== formData.confirmPassword) {
+          throw new Error("Passwords do not match.");
+        }
+        if (!formData.agreeToTerms) {
+          throw new Error("Please accept the terms and conditions.");
+        }
+
+        signUp({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          password: formData.password,
+          phone: formData.phone.trim(),
+          role: currentRole,
+        });
+      } else {
+        signIn({
+          email: formData.email.trim(),
+          password: formData.password,
+          role: currentRole,
+        });
+      }
+
+      resetForm();
+      navigate(getDashboardPathForRole(currentRole), { replace: true });
+    } catch (submitError) {
+      setError(submitError.message || "Authentication failed.");
+    }
+  };
+
+  const toggleAuthMode = () => {
+    setIsSignIn((prev) => !prev);
     setError("");
+    resetForm();
+  };
+
+  const handleDemoFill = (credential) => {
+    setCurrentRole(credential.role);
+    setIsSignIn(true);
+    setFormData((prev) => ({
+      ...prev,
+      email: credential.email,
+      password: credential.password,
+    }));
   };
 
   const styles = {
     container: {
       minHeight: "100vh",
-      backgroundColor: "#F9FAFB",
+      background:
+        "radial-gradient(circle at top, rgba(20, 184, 166, 0.16), transparent 35%), linear-gradient(180deg, #F8FAFC 0%, #EEF2F7 100%)",
       fontFamily: "Inter, sans-serif",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: "2rem",
+      padding: "1.5rem",
     },
     authCard: {
       backgroundColor: "#FFFFFF",
-      borderRadius: "1rem",
-      boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)",
-      maxWidth: "500px",
+      borderRadius: "1.25rem",
+      boxShadow: "0 18px 60px rgba(15, 23, 42, 0.14)",
+      maxWidth: "1080px",
       width: "100%",
       overflow: "hidden",
+      border: "1px solid rgba(226, 232, 240, 0.9)",
+    },
+    authLayout: {
+      display: "grid",
+      gridTemplateColumns: "minmax(280px, 0.9fr) minmax(0, 1.1fr)",
+      minHeight: "640px",
+    },
+    promoPanel: {
+      background:
+        "linear-gradient(160deg, #0F766E 0%, #14B8A6 52%, #0B3B38 100%)",
+      color: "white",
+      padding: "2.5rem",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      gap: "1.5rem",
+    },
+    promoBadge: {
+      display: "inline-flex",
+      alignItems: "center",
+      width: "fit-content",
+      padding: "0.45rem 0.8rem",
+      borderRadius: "999px",
+      backgroundColor: "rgba(255,255,255,0.14)",
+      fontSize: "0.82rem",
+      fontWeight: "700",
+      letterSpacing: "0.02em",
+    },
+    promoTitle: {
+      fontSize: "2.2rem",
+      lineHeight: 1.05,
+      fontWeight: "800",
+      margin: 0,
+    },
+    promoText: {
+      fontSize: "1rem",
+      lineHeight: 1.7,
+      margin: 0,
+      maxWidth: "32ch",
+      opacity: 0.96,
+    },
+    promoList: {
+      display: "grid",
+      gap: "0.85rem",
+      marginTop: "1rem",
+    },
+    promoItem: {
+      display: "flex",
+      gap: "0.8rem",
+      alignItems: "flex-start",
+      padding: "0.95rem 1rem",
+      borderRadius: "0.9rem",
+      backgroundColor: "rgba(255,255,255,0.10)",
+      border: "1px solid rgba(255,255,255,0.14)",
+    },
+    promoIcon: {
+      width: "2rem",
+      height: "2rem",
+      borderRadius: "0.6rem",
+      backgroundColor: "rgba(255,255,255,0.18)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+      fontSize: "1rem",
+    },
+    promoItemTitle: {
+      margin: 0,
+      fontWeight: "800",
+      fontSize: "0.95rem",
+    },
+    promoItemText: {
+      margin: "0.2rem 0 0",
+      fontSize: "0.9rem",
+      lineHeight: 1.5,
+      opacity: 0.9,
+    },
+    promoFooter: {
+      fontSize: "0.9rem",
+      lineHeight: 1.6,
+      opacity: 0.9,
     },
     header: {
-      background: "linear-gradient(135deg, #0D9488, #14B8A6)",
-      padding: "2.5rem 2rem",
+      background:
+        "linear-gradient(135deg, rgba(15,118,110,0.08), rgba(20,184,166,0.12))",
+      padding: "2rem 2rem 1.25rem",
       textAlign: "center",
-      color: "white",
-    },
-    logo: {
-      fontSize: "3rem",
-      marginBottom: "0.5rem",
+      color: "#0F172A",
+      borderBottom: "1px solid #E2E8F0",
     },
     headerTitle: {
-      fontSize: "2rem",
-      fontWeight: "700",
-      marginBottom: "0.5rem",
+      fontSize: "1.75rem",
+      fontWeight: "800",
+      margin: "0 0 0.45rem",
     },
     headerSubtitle: {
       fontSize: "1rem",
-      opacity: "0.9",
+      opacity: "0.78",
+      margin: 0,
     },
     formContainer: {
-      padding: "2.5rem 2rem",
+      padding: "1.75rem 2rem 2rem",
     },
     tabContainer: {
       display: "flex",
-      gap: "1rem",
-      marginBottom: "2rem",
-      backgroundColor: "#F9FAFB",
+      gap: "0.75rem",
+      marginBottom: "1rem",
+      backgroundColor: "#F8FAFC",
       padding: "0.5rem",
-      borderRadius: "0.75rem",
+      borderRadius: "0.9rem",
+      flexWrap: "wrap",
     },
     tab: {
       flex: 1,
-      padding: "0.75rem",
+      padding: "0.8rem",
       border: "none",
       backgroundColor: "transparent",
-      color: "#6B7280",
-      fontWeight: "600",
-      fontSize: "1rem",
+      color: "#64748B",
+      fontWeight: "700",
+      fontSize: "0.98rem",
       cursor: "pointer",
-      borderRadius: "0.5rem",
-      transition: "all 0.3s ease",
+      borderRadius: "0.75rem",
+      minWidth: "120px",
     },
     tabActive: {
       backgroundColor: "#FFFFFF",
-      color: "#0D9488",
-      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+      color: "#0F766E",
+      boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
     },
     formGroup: {
-      marginBottom: "1.5rem",
+      marginBottom: "1rem",
     },
     label: {
       display: "block",
-      fontWeight: "600",
-      color: "#111827",
-      marginBottom: "0.5rem",
-      fontSize: "0.95rem",
+      fontWeight: "700",
+      color: "#0F172A",
+      marginBottom: "0.45rem",
+      fontSize: "0.92rem",
     },
     input: {
       width: "100%",
-      padding: "0.875rem 1rem",
-      borderRadius: "0.5rem",
-      border: "1px solid #E5E7EB",
-      backgroundColor: "#F9FAFB",
-      color: "#111827",
+      padding: "0.9rem 1rem",
+      borderRadius: "0.7rem",
+      border: "1px solid #D7DEE8",
+      backgroundColor: "#F8FAFC",
+      color: "#0F172A",
       fontSize: "1rem",
-      transition: "all 0.3s ease",
       boxSizing: "border-box",
+      minHeight: "52px",
     },
     passwordContainer: {
       position: "relative",
@@ -139,404 +292,424 @@ function AuthPages() {
       top: "50%",
       transform: "translateY(-50%)",
       cursor: "pointer",
-      color: "#6B7280",
-      fontSize: "1.2rem",
+      color: "#64748B",
+      fontSize: "0.85rem",
+      userSelect: "none",
+      padding: "0.2rem 0.4rem",
+      borderRadius: "999px",
+      backgroundColor: "rgba(255, 255, 255, 0.85)",
     },
     checkboxContainer: {
       display: "flex",
       alignItems: "center",
-      gap: "0.5rem",
+      gap: "0.55rem",
     },
     checkbox: {
       width: "18px",
       height: "18px",
       cursor: "pointer",
-      accentColor: "#0D9488",
+      accentColor: "#0F766E",
     },
     checkboxLabel: {
-      fontSize: "0.9rem",
-      color: "#6B7280",
+      fontSize: "0.92rem",
+      color: "#475569",
       cursor: "pointer",
     },
     link: {
-      color: "#0D9488",
-      fontWeight: "600",
-      textDecoration: "none",
+      color: "#0F766E",
+      fontWeight: "700",
       cursor: "pointer",
     },
     button: {
       width: "100%",
       padding: "1rem",
-      backgroundColor: "#0D9488",
+      backgroundColor: "#0F766E",
       color: "white",
       border: "none",
-      borderRadius: "0.5rem",
-      fontSize: "1.1rem",
-      fontWeight: "600",
+      borderRadius: "0.75rem",
+      fontSize: "1rem",
+      fontWeight: "700",
       cursor: "pointer",
-      transition: "all 0.3s ease",
+      marginTop: "0.5rem",
+      minHeight: "54px",
+    },
+    helperBox: {
       marginTop: "1rem",
+      padding: "1rem",
+      borderRadius: "0.9rem",
+      backgroundColor: "#ECFEFF",
+      border: "1px solid #A5F3FC",
+      color: "#155E75",
     },
-    divider: {
-      display: "flex",
-      alignItems: "center",
-      margin: "1.5rem 0",
-      color: "#6B7280",
-      fontSize: "0.9rem",
-    },
-    dividerLine: {
-      flex: 1,
-      height: "1px",
-      backgroundColor: "#E5E7EB",
-    },
-    dividerText: {
-      padding: "0 1rem",
-    },
-    socialButtons: {
-      display: "flex",
-      gap: "1rem",
-    },
-    socialButton: {
-      flex: 1,
-      padding: "0.875rem",
-      border: "1px solid #E5E7EB",
-      backgroundColor: "#FFFFFF",
-      borderRadius: "0.5rem",
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
+    helperGrid: {
+      display: "grid",
       gap: "0.5rem",
-      fontSize: "0.95rem",
-      fontWeight: "600",
-      color: "#111827",
+      marginTop: "0.75rem",
+      gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+    },
+    helperButton: {
+      border: "1px solid #A5F3FC",
+      backgroundColor: "white",
+      color: "#0F766E",
+      borderRadius: "0.7rem",
+      padding: "0.75rem",
+      cursor: "pointer",
+      fontWeight: "700",
+      minHeight: "46px",
     },
     footer: {
       textAlign: "center",
-      marginTop: "2rem",
-      color: "#6B7280",
-      fontSize: "0.9rem",
+      marginTop: "1.5rem",
+      color: "#64748B",
+      fontSize: "0.95rem",
     },
     error: {
-      color: "#EF4444",
-      fontSize: "0.9rem",
+      color: "#DC2626",
+      fontSize: "0.92rem",
       marginBottom: "1rem",
       textAlign: "center",
+      backgroundColor: "#FEF2F2",
+      border: "1px solid #FECACA",
+      padding: "0.75rem 1rem",
+      borderRadius: "0.75rem",
+    },
+    demoTitle: {
+      margin: "0 0 0.25rem",
+      fontSize: "0.98rem",
+      fontWeight: "800",
+    },
+    demoText: {
+      margin: 0,
+      fontSize: "0.92rem",
+      lineHeight: 1.5,
     },
   };
 
   return (
     <div style={styles.container}>
-      <style>
-        {`
-          input:focus, select:focus {
-            outline: none;
-            border-color: #0D9488 !important;
-            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+      <style>{`
+        * {
+          box-sizing: border-box;
+        }
+        input:focus, select:focus {
+          outline: none;
+          border-color: #0F766E !important;
+          box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+        }
+        input::placeholder {
+          color: #94A3B8;
+        }
+        button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+        }
+        .tab:hover {
+          background-color: rgba(15, 118, 110, 0.05);
+        }
+        .link:hover {
+          text-decoration: underline;
+        }
+        .auth-shell {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+        }
+        @media (max-width: 640px) {
+          .auth-shell {
+            align-items: flex-start;
           }
-          button:hover {
-            background-color: #14B8A6;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+          .auth-card {
+            border-radius: 1rem;
           }
-          .social-btn:hover {
-            border-color: #0D9488;
-            background-color: #F0FDFA;
+          .auth-layout {
+            grid-template-columns: 1fr !important;
           }
-          .tab:hover {
-            background-color: rgba(13, 148, 136, 0.05);
+          .promo-panel {
+            padding: 1.5rem !important;
           }
-          .link:hover {
-            text-decoration: underline;
+          .promo-title {
+            font-size: 1.7rem !important;
           }
-          @media (max-width: 600px) {
-            .auth-card {
-              margin: 1rem;
-            }
-          }
-        `}
-      </style>
+        }
+      `}</style>
 
+      <div className="auth-shell">
       <div style={styles.authCard} className="auth-card">
-        {/* Header */}
-        <div style={styles.header}>
-          <div style={styles.logo}>🩺</div>
-          <h1 style={styles.headerTitle}>Care Connect</h1>
-          <p style={styles.headerSubtitle}>Your One-Stop Health Assistant</p>
-        </div>
-
-        {/* Form Container */}
-        <div style={styles.formContainer}>
-          {/* Role Tabs */}
-          <div style={styles.tabContainer}>
-            <button
-              style={{
-                ...styles.tab,
-                ...(currentRole === "user" ? styles.tabActive : {}),
-              }}
-              className="tab"
-              onClick={() => setCurrentRole("user")}
-            >
-              User
-            </button>
-            <button
-              style={{
-                ...styles.tab,
-                ...(currentRole === "doctor" ? styles.tabActive : {}),
-              }}
-              className="tab"
-              onClick={() => setCurrentRole("doctor")}
-            >
-              Doctor
-            </button>
-            <button
-              style={{
-                ...styles.tab,
-                ...(currentRole === "admin" ? styles.tabActive : {}),
-              }}
-              className="tab"
-              onClick={() => setCurrentRole("admin")}
-            >
-              Admin
-            </button>
-          </div>
-
-          {/* Sign In/Sign Up Tabs */}
-          <div style={styles.tabContainer}>
-            <button
-              style={{
-                ...styles.tab,
-                ...(isSignIn ? styles.tabActive : {}),
-              }}
-              className="tab"
-              onClick={() => setIsSignIn(true)}
-            >
-              Sign In
-            </button>
-            <button
-              style={{
-                ...styles.tab,
-                ...(!isSignIn ? styles.tabActive : {}),
-              }}
-              className="tab"
-              onClick={() => setIsSignIn(false)}
-            >
-              Sign Up
-            </button>
-          </div>
-
-          {/* Error Message */}
-          {error && <div style={styles.error}>{error}</div>}
-
-          {/* Form Fields */}
-          <div>
-            {/* Sign Up - Name Field */}
-            {!isSignIn && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Full Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter your full name"
-                  style={styles.input}
-                  required
-                />
-              </div>
-            )}
-
-            {/* Email Field */}
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Email Address</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Enter your email"
-                style={styles.input}
-                required
-              />
-            </div>
-
-            {/* Sign Up - Phone Field */}
-            {!isSignIn && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="Enter your phone number (optional)"
-                  style={styles.input}
-                />
-              </div>
-            )}
-
-            {/* Password Field */}
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Password</label>
-              <div style={styles.passwordContainer}>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Enter your password"
-                  style={styles.input}
-                  required
-                />
-                <span
-                  style={styles.eyeIcon}
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? "👁️" : "👁️‍🗨️"}
-                </span>
-              </div>
-            </div>
-
-            {/* Sign Up - Confirm Password Field */}
-            {!isSignIn && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Confirm Password</label>
-                <div style={styles.passwordContainer}>
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    placeholder="Confirm your password"
-                    style={styles.input}
-                    required
-                  />
-                  <span
-                    style={styles.eyeIcon}
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Remember Me / Terms & Conditions */}
-            <div style={styles.formGroup}>
-              {isSignIn ? (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <div style={styles.checkboxContainer}>
-                    <input
-                      type="checkbox"
-                      id="remember"
-                      style={styles.checkbox}
-                    />
-                    <label htmlFor="remember" style={styles.checkboxLabel}>
-                      Remember me
-                    </label>
-                  </div>
-                  <span style={styles.link} className="link">
-                    Forgot Password?
-                  </span>
-                </div>
-              ) : (
-                <div style={styles.checkboxContainer}>
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    name="agreeToTerms"
-                    checked={formData.agreeToTerms}
-                    onChange={handleInputChange}
-                    style={styles.checkbox}
-                  />
-                  <label htmlFor="terms" style={styles.checkboxLabel}>
-                    I agree to the{" "}
-                    <span style={styles.link} className="link">
-                      Terms & Conditions
-                    </span>
-                  </label>
-                </div>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <button onClick={handleSubmit} style={styles.button}>
-              {isSignIn ? "Sign In" : "Create Account"}
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div style={styles.divider}>
-            <div style={styles.dividerLine}></div>
-            <span style={styles.dividerText}>OR</span>
-            <div style={styles.dividerLine}></div>
-          </div>
-
-          {/* Social Login Buttons */}
-          <div style={styles.socialButtons}>
-            <button style={styles.socialButton} className="social-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              Google
-            </button>
-            <button style={styles.socialButton} className="social-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-              Facebook
-            </button>
-          </div>
-
-          {/* Footer */}
-          <div style={styles.footer}>
-            {isSignIn ? (
-              <p>
-                Don't have an account?{" "}
-                <span
-                  style={styles.link}
-                  className="link"
-                  onClick={toggleAuthMode}
-                >
-                  Sign Up
-                </span>
+        <div style={styles.authLayout} className="auth-layout">
+          <aside style={styles.promoPanel} className="promo-panel">
+            <div>
+              <span style={styles.promoBadge}>Care Connect</span>
+              <h2 style={styles.promoTitle} className="promo-title">
+                Secure health access for every role.
+              </h2>
+              <p style={styles.promoText}>
+                Sign in as a patient, doctor, or admin. The app now uses a clean local auth flow with role-based routing.
               </p>
-            ) : (
-              <p>
-                Already have an account?{" "}
-                <span
-                  style={styles.link}
-                  className="link"
-                  onClick={toggleAuthMode}
+            </div>
+
+            <div style={styles.promoList}>
+              <div style={styles.promoItem}>
+                <div style={styles.promoIcon}>1</div>
+                <div>
+                  <p style={styles.promoItemTitle}>User dashboard</p>
+                  <p style={styles.promoItemText}>Book appointments and review your health history.</p>
+                </div>
+              </div>
+              <div style={styles.promoItem}>
+                <div style={styles.promoIcon}>2</div>
+                <div>
+                  <p style={styles.promoItemTitle}>Doctor workspace</p>
+                  <p style={styles.promoItemText}>Manage visits, prescriptions, and availability.
+                  </p>
+                </div>
+              </div>
+              <div style={styles.promoItem}>
+                <div style={styles.promoIcon}>3</div>
+                <div>
+                  <p style={styles.promoItemTitle}>Admin controls</p>
+                  <p style={styles.promoItemText}>Track notices and system activity from one place.</p>
+                </div>
+              </div>
+            </div>
+
+            <p style={styles.promoFooter}>
+              Demo accounts are available below for quick testing while the backend remains local.
+            </p>
+          </aside>
+
+          <section>
+            <div style={styles.header}>
+              <h1 style={styles.headerTitle}>Sign in</h1>
+              <p style={styles.headerSubtitle}>
+                Use a demo role or create a local account
+              </p>
+            </div>
+
+            <div style={styles.formContainer}>
+              <div style={styles.tabContainer}>
+                {[
+                  { key: "user", label: "User" },
+                  { key: "doctor", label: "Doctor" },
+                  { key: "admin", label: "Admin" },
+                ].map((role) => (
+                  <button
+                    key={role.key}
+                    type="button"
+                    style={{
+                      ...styles.tab,
+                      ...(currentRole === role.key ? styles.tabActive : {}),
+                    }}
+                    className="tab"
+                    onClick={() => setCurrentRole(role.key)}
+                  >
+                    {role.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={styles.tabContainer}>
+                <button
+                  type="button"
+                  style={{ ...styles.tab, ...(isSignIn ? styles.tabActive : {}) }}
+                  className="tab"
+                  onClick={() => setIsSignIn(true)}
                 >
                   Sign In
-                </span>
-              </p>
-            )}
-          </div>
+                </button>
+                <button
+                  type="button"
+                  style={{ ...styles.tab, ...(!isSignIn ? styles.tabActive : {}) }}
+                  className="tab"
+                  onClick={() => setIsSignIn(false)}
+                >
+                  Sign Up
+                </button>
+              </div>
+
+              {error && <div style={styles.error}>{error}</div>}
+
+              <form onSubmit={handleSubmit}>
+                {!isSignIn && (
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Full Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Enter your full name"
+                      style={styles.input}
+                    />
+                  </div>
+                )}
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter your email"
+                    style={styles.input}
+                  />
+                </div>
+
+                {!isSignIn && (
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Phone Number</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="Enter your phone number (optional)"
+                      style={styles.input}
+                    />
+                  </div>
+                )}
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Password</label>
+                  <div style={styles.passwordContainer}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="Enter your password"
+                      style={styles.input}
+                    />
+                    <span
+                      style={styles.eyeIcon}
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      role="button"
+                      aria-label="Toggle password visibility"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </span>
+                  </div>
+                </div>
+
+                {!isSignIn && (
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Confirm Password</label>
+                    <div style={styles.passwordContainer}>
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        placeholder="Confirm your password"
+                        style={styles.input}
+                      />
+                      <span
+                        style={styles.eyeIcon}
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                        role="button"
+                        aria-label="Toggle confirm password visibility"
+                      >
+                        {showConfirmPassword ? "Hide" : "Show"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div style={styles.formGroup}>
+                  {isSignIn ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "1rem",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={styles.checkboxContainer}>
+                        <input
+                          type="checkbox"
+                          id="remember"
+                          style={styles.checkbox}
+                        />
+                        <label htmlFor="remember" style={styles.checkboxLabel}>
+                          Remember me
+                        </label>
+                      </div>
+                      <span style={styles.link} className="link">
+                        Forgot Password?
+                      </span>
+                    </div>
+                  ) : (
+                    <div style={styles.checkboxContainer}>
+                      <input
+                        type="checkbox"
+                        id="terms"
+                        name="agreeToTerms"
+                        checked={formData.agreeToTerms}
+                        onChange={handleInputChange}
+                        style={styles.checkbox}
+                      />
+                      <label htmlFor="terms" style={styles.checkboxLabel}>
+                        I agree to the <span style={styles.link}>Terms & Conditions</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                <button type="submit" style={styles.button}>
+                  {isSignIn ? "Sign In" : "Create Account"}
+                </button>
+              </form>
+
+              <div style={styles.helperBox}>
+                <p style={styles.demoTitle}>Demo accounts</p>
+                <p style={styles.demoText}>
+                  Use these to sign in locally while the app runs without a real backend.
+                </p>
+                <div style={styles.helperGrid}>
+                  {demoCredentials.map((credential) => (
+                    <button
+                      key={credential.role}
+                      type="button"
+                      style={styles.helperButton}
+                      onClick={() => handleDemoFill(credential)}
+                    >
+                      {credential.role}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={styles.footer}>
+                {isSignIn ? (
+                  <p>
+                    Don&apos;t have an account?{" "}
+                    <span
+                      style={styles.link}
+                      className="link"
+                      onClick={toggleAuthMode}
+                    >
+                      Sign Up
+                    </span>
+                  </p>
+                ) : (
+                  <p>
+                    Already have an account?{" "}
+                    <span
+                      style={styles.link}
+                      className="link"
+                      onClick={toggleAuthMode}
+                    >
+                      Sign In
+                    </span>
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
         </div>
+      </div>
       </div>
     </div>
   );
