@@ -1,8 +1,69 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { supabase } from "../supabaseClient";
 import "./DoctorDashboard.css";
 import { Link } from "react-router-dom";
 const DOCTOR_ID = "550e8400-e29b-41d4-a716-446655440001";
+
+const demoDoctor = {
+  id: DOCTOR_ID,
+  full_name: "Dr. Sarah Johnson",
+  specialty: "Cardiologist",
+  is_available: true,
+};
+
+const demoPatients = [
+  { id: "p-1", full_name: "Ava Patel" },
+  { id: "p-2", full_name: "Noah Singh" },
+  { id: "p-3", full_name: "Mia Khan" },
+];
+
+const demoAppointments = [
+  {
+    id: "a-1",
+    patient_id: "p-1",
+    patients: { full_name: "Ava Patel" },
+    doctor_id: DOCTOR_ID,
+    appointment_date: new Date().toISOString().split("T")[0],
+    appointment_time: "10:30",
+    mode: "video-call",
+    reason: "Routine checkup",
+    status: "upcoming",
+  },
+  {
+    id: "a-2",
+    patient_id: "p-2",
+    patients: { full_name: "Noah Singh" },
+    doctor_id: DOCTOR_ID,
+    appointment_date: new Date().toISOString().split("T")[0],
+    appointment_time: "14:00",
+    mode: "in-person",
+    reason: "Blood pressure follow-up",
+    status: "completed",
+  },
+];
+
+const demoPrescriptions = [
+  {
+    id: "pr-1",
+    patient_id: "p-1",
+    doctor_id: DOCTOR_ID,
+    patients: { full_name: "Ava Patel" },
+    medication: "Atorvastatin",
+    dosage: "10mg once daily",
+    prescribed_date: new Date().toISOString().split("T")[0],
+  },
+];
+
+const demoMedicalRecords = [
+  {
+    id: "mr-1",
+    patient_id: "p-1",
+    doctor_id: DOCTOR_ID,
+    visit_date: new Date().toISOString().split("T")[0],
+    diagnosis: "Hypertension",
+    symptoms: "Headache and elevated blood pressure",
+    treatment_plan: "Medication and lifestyle changes",
+  },
+];
 
 const DoctorDashboard = () => {
   const [doctor, setDoctor] = useState(null);
@@ -51,40 +112,23 @@ useEffect(() => {
 
   const fetchData = useCallback(
     async (doctorId) => {
-      try {
-        const { data: appointmentsData, error: appointmentsError } =
-          await supabase
-            .from("appointments")
-            .select("*, patients(*), doctors(full_name)")
-            .eq("doctor_id", doctorId);
-        if (appointmentsError) throw appointmentsError;
-        setAppointments(appointmentsData);
+      const activeDoctorId = doctorId || DOCTOR_ID;
+      const clonedAppointments = demoAppointments
+        .filter((appointment) => appointment.doctor_id === activeDoctorId)
+        .map((appointment) => ({ ...appointment, patients: { ...appointment.patients } }));
+      const clonedPatients = demoPatients.map((patient) => ({ ...patient }));
+      const clonedPrescriptions = demoPrescriptions
+        .filter((prescription) => prescription.doctor_id === activeDoctorId)
+        .map((prescription) => ({ ...prescription, patients: { ...prescription.patients } }));
+      const clonedRecords = demoMedicalRecords
+        .filter((record) => record.doctor_id === activeDoctorId)
+        .map((record) => ({ ...record }));
 
-        const { data: patientsData, error: patientsError } = await supabase
-          .from("patients")
-          .select("*");
-        if (patientsError) throw patientsError;
-        setPatients(patientsData);
-
-        const { data: prescriptionsData, error: prescriptionsError } =
-          await supabase
-            .from("prescriptions")
-            .select("*, patients(full_name)")
-            .eq("doctor_id", doctorId);
-        if (prescriptionsError) throw prescriptionsError;
-        setPrescriptions(prescriptionsData);
-
-        const { data: recordsData, error: recordsError } = await supabase
-          .from("medical_records")
-          .select("*, patients(full_name)")
-          .eq("doctor_id", doctorId);
-        if (recordsError) throw recordsError;
-        setMedicalRecords(recordsData);
-      } catch (error) {
-        showToast(`Error fetching data: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
+      setAppointments(clonedAppointments);
+      setPatients(clonedPatients);
+      setPrescriptions(clonedPrescriptions);
+      setMedicalRecords(clonedRecords);
+      setLoading(false);
     },
     [showToast]
   );
@@ -97,21 +141,8 @@ useEffect(() => {
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("doctors")
-          .select("*")
-          .eq("id", DOCTOR_ID)
-          .single();
-        if (error) throw error;
-        if (data) {
-          setDoctor(data);
-          await fetchData(data.id);
-        }
-      } catch (error) {
-        showToast(`Error fetching profile: ${error.message}`);
-        setLoading(false);
-      }
+      setDoctor({ ...demoDoctor });
+      await fetchData(DOCTOR_ID);
     };
     fetchInitialData();
   }, [fetchData, showToast]);
@@ -122,72 +153,45 @@ useEffect(() => {
   }, []);
 
   const handleAppointmentStatusUpdate = async (id, status) => {
-    try {
-      const { error } = await supabase
-        .from("appointments")
-        .update({ status })
-        .eq("id", id);
-      if (error) throw error;
-      showToast(`Appointment marked as ${status}!`);
-      fetchData(doctor.id);
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
+    setAppointments((prev) =>
+      prev.map((appointment) =>
+        appointment.id === id ? { ...appointment, status } : appointment
+      )
+    );
+    showToast(`Appointment marked as ${status}!`);
     setModalOpen((prev) => ({ ...prev, markComplete: false }));
   };
 
   const handleCreatePrescription = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    try {
-      const newPrescription = {
-        patient_id: formData.get("patient_id"),
-        doctor_id: doctor.id,
-        medication: formData.get("medication"),
-        dosage: formData.get("dosage"),
-        instructions: formData.get("instructions") || "No special instructions",
-      };
-      const { error } = await supabase
-        .from("prescriptions")
-        .insert(newPrescription);
-      if (error) throw error;
-      showToast("Prescription created successfully!");
-      fetchData(doctor.id);
-      setModalOpen((prev) => ({ ...prev, prescription: false }));
-    } catch (error) {
-      showToast(`Error creating prescription: ${error.message}`);
-    }
+    const patient = patients.find((item) => item.id === formData.get("patient_id"));
+    const newPrescription = {
+      id: `pr-${Date.now()}`,
+      patient_id: formData.get("patient_id"),
+      doctor_id: doctor.id,
+      patients: { full_name: patient?.full_name || "Unknown" },
+      medication: formData.get("medication"),
+      dosage: formData.get("dosage"),
+      prescribed_date: new Date().toISOString().split("T")[0],
+      instructions: formData.get("instructions") || "No special instructions",
+    };
+    setPrescriptions((prev) => [newPrescription, ...prev]);
+    showToast("Prescription created successfully!");
+    setModalOpen((prev) => ({ ...prev, prescription: false }));
   };
 
   const handleDeletePrescription = async (id) => {
     if (window.confirm("Are you sure you want to delete this prescription?")) {
-      try {
-        const { error } = await supabase
-          .from("prescriptions")
-          .delete()
-          .eq("id", id);
-        if (error) throw error;
-        showToast("Prescription deleted.");
-        fetchData(doctor.id);
-      } catch (error) {
-        showToast(`Error: ${error.message}`);
-      }
+      setPrescriptions((prev) => prev.filter((prescription) => prescription.id !== id));
+      showToast("Prescription deleted.");
     }
   };
 
   const handleAvailabilityToggle = async () => {
     const newStatus = !doctor.is_available;
-    try {
-      const { error } = await supabase
-        .from("doctors")
-        .update({ is_available: newStatus })
-        .eq("id", doctor.id);
-      if (error) throw error;
-      setDoctor((prev) => ({ ...prev, is_available: newStatus }));
-      showToast(`Status changed to ${newStatus ? "Available" : "Unavailable"}`);
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
+    setDoctor((prev) => ({ ...prev, is_available: newStatus }));
+    showToast(`Status changed to ${newStatus ? "Available" : "Unavailable"}`);
   };
 
   const handleDarkModeToggle = () => {

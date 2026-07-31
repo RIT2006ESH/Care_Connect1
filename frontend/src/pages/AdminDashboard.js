@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 import "./AdminDashboard.css";
-import { supabase } from "../supabaseClient";
+
+const demoDoctors = [
+  { id: 1, name: "Dr. Sarah Johnson", specialty: "Cardiologist", status: "active" },
+  { id: 2, name: "Dr. Michael Chen", specialty: "Dermatologist", status: "active" },
+  { id: 3, name: "Dr. Emily Williams", specialty: "Neurologist", status: "inactive" },
+  { id: 4, name: "Dr. David Brown", specialty: "General Physician", status: "active" },
+];
+
+const demoNotices = [
+  { id: 1, title: "Seasonal Flu Advisory", status: "active" },
+  { id: 2, title: "Vaccination Drive", status: "active" },
+  { id: 3, title: "Maintenance Notice", status: "inactive" },
+];
 
 const AdminDashboard = () => {
   // Data State
@@ -23,32 +35,11 @@ const AdminDashboard = () => {
   const userChartInstance = useRef(null);
   const appointmentChartInstance = useRef(null);
 
-  // Initial Data Fetching from Supabase
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetch doctors from the 'doctors' table
-        const { data: doctorsData, error: doctorsError } = await supabase
-          .from("doctors")
-          .select("*");
-        if (doctorsError) throw doctorsError;
-        setDoctors(doctorsData || []);
-
-        // Fetch notices from the 'notices' table
-        const { data: noticesData, error: noticesError } = await supabase
-          .from("notices")
-          .select("*");
-        if (noticesError) throw noticesError;
-        setNotices(noticesData || []);
-      } catch (error) {
-        console.error("Error fetching data from Supabase:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    setLoading(true);
+    setDoctors(demoDoctors);
+    setNotices(demoNotices);
+    setLoading(false);
 
     // Check for dark mode preference
     const darkModePref = localStorage.getItem("darkMode") === "enabled";

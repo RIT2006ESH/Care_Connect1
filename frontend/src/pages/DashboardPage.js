@@ -18,18 +18,58 @@ import {
   Pill,
 } from "lucide-react";
 import "./DashboardPage.css";
-import { createClient } from "@supabase/supabase-js";
 import { Link } from "react-router-dom";
 
-// Supabase Client Configuration
-const supabaseUrl = "https://kttmrlnuaxrmknuizddc.supabase.co";
-const supabaseKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0dG1ybG51YXhybWtudWl6ZGRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMjcwMDYsImV4cCI6MjA3NTYwMzAwNn0.Qh5gEm9xdvtzrnS1o4iXfZWySH3_lSIvMiDA2-aHum8";
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// In a real app, you would get the current user's ID from authentication.
-// For this example, we'll hardcode a UUID that exists in your database.
 const currentPatientId = "550e8400-e29b-41d4-a716-446655440003"; // Example: Jane Smith's ID from your SQL
+
+const demoUserData = {
+  name: "Jane Smith",
+  email: "jane.smith@example.com",
+  phone: "+1 555-010-2468",
+  dob: "1991-06-18",
+  bloodType: "A+",
+  patientId: currentPatientId,
+};
+
+const demoAppointments = [
+  {
+    id: "apt-1",
+    patient_id: currentPatientId,
+    doctor_id: "sarah-johnson",
+    specialty: "Cardiologist",
+    appointment_date: new Date().toISOString().split("T")[0],
+    appointment_time: "10:30",
+    mode: "video-call",
+    reason: "Follow-up visit",
+  },
+  {
+    id: "apt-2",
+    patient_id: currentPatientId,
+    doctor_id: "michael-chen",
+    specialty: "Dermatologist",
+    appointment_date: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+    appointment_time: "14:00",
+    mode: "in-person",
+    reason: "Skin review",
+  },
+];
+
+const demoPastVisits = [
+  {
+    id: "visit-1",
+    doctor: "Dr. Sarah Johnson",
+    type: "Hypertension",
+    date: new Date(Date.now() - 86400000 * 10).toISOString().split("T")[0],
+    notes: "Blood pressure monitoring and medication review.",
+  },
+  {
+    id: "visit-2",
+    doctor: "Dr. Michael Chen",
+    type: "Dermatitis",
+    date: new Date(Date.now() - 86400000 * 24).toISOString().split("T")[0],
+    notes: "Rash treatment plan and follow-up advice.",
+  },
+];
 
 const DashboardPage = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -122,64 +162,15 @@ const DashboardPage = () => {
   }, []);
 
   const fetchUserData = async () => {
-    // Fetches from 'patients' table using the correct UUID
-    const { data, error } = await supabase
-      .from("patients")
-      .select("*")
-      .eq("id", currentPatientId)
-      .single();
-
-    if (data && !error) {
-      setUserData({
-        // Assuming your 'patients' table has these columns
-        name: `${data.first_name} ${data.last_name}`,
-        email: data.email,
-        phone: data.phone_number,
-        dob: data.date_of_birth,
-        bloodType: data.blood_type,
-        patientId: data.id,
-      });
-    } else {
-      console.error("Error fetching patient data:", error);
-    }
+    setUserData({ ...demoUserData });
   };
 
   const fetchAppointments = async () => {
-    // Fetches using 'patient_id' and the UUID, ordering by 'appointment_date'
-    const { data, error } = await supabase
-      .from("appointments")
-      .select("*")
-      .eq("patient_id", currentPatientId)
-      .order("appointment_date", { ascending: true });
-
-    if (data && !error) {
-      setAppointments(data);
-    } else {
-      console.error("Error fetching appointments:", error);
-    }
+    setAppointments([...demoAppointments]);
   };
 
   const fetchPastVisits = async () => {
-    // Fetches from 'medical_records' table
-    const { data, error } = await supabase
-      .from("medical_records")
-      .select("*")
-      .eq("patient_id", currentPatientId)
-      .order("visit_date", { ascending: false });
-
-    if (data && !error) {
-      // Map fields to match what the history table component expects
-      const formattedVisits = data.map((record) => ({
-        id: record.id,
-        doctor: `Dr. ID ${record.doctor_id}`, // In a real app, join to get the name
-        type: record.diagnosis,
-        date: record.visit_date,
-        notes: record.symptoms || record.treatment_plan,
-      }));
-      setPastVisits(formattedVisits);
-    } else {
-      console.error("Error fetching past visits:", error);
-    }
+    setPastVisits([...demoPastVisits]);
   };
 
   const refreshHealthTips = () => {
@@ -219,70 +210,42 @@ const DashboardPage = () => {
   const handleBookAppointment = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const [doctor, specialty] = formData.get("doctor").split("|");
-
     const newAppointment = {
+      id: `apt-${Date.now()}`,
       patient_id: currentPatientId,
-      // NOTE: Your schema expects a doctor_id (UUID). Inserting a name will fail
-      // if the column type is UUID. This is a simplification for the example.
-      // You would need to fetch doctors with their IDs to do this properly.
+      doctor_id: formData.get("doctor").split("|")[0].toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      specialty: formData.get("doctor").split("|")[1],
       appointment_date: formData.get("date"),
       appointment_time: formData.get("time"),
-      mode: formData.get("mode"),
+      mode: formData.get("mode").toLowerCase().replace(/\s+/g, "-"),
       reason: formData.get("reason") || "General consultation",
       status: "upcoming",
     };
-
-    const { error } = await supabase
-      .from("appointments")
-      .insert([newAppointment]);
-
-    if (!error) {
-      fetchAppointments();
-      setShowBookingModal(false);
-      showToast("Appointment booked successfully!");
-    } else {
-      console.error("Error booking appointment:", error);
-      showToast(`Booking failed: ${error.message}`);
-    }
+    setAppointments((prev) => [...prev, newAppointment]);
+    setShowBookingModal(false);
+    showToast("Appointment booked successfully!");
   };
 
   const cancelAppointment = async (id) => {
     if (window.confirm("Are you sure you want to cancel this appointment?")) {
-      const { error } = await supabase
-        .from("appointments")
-        .delete()
-        .eq("id", id);
-      if (!error) {
-        fetchAppointments();
-        showToast("Appointment cancelled successfully.");
-      }
+      setAppointments((prev) => prev.filter((appointment) => appointment.id !== id));
+      showToast("Appointment cancelled successfully.");
     }
   };
 
   const updateProfile = async (e) => {
     e.preventDefault();
-    // This function assumes your 'patients' table has these specific columns.
-    // Adjust formData.get() names and the update object to match your schema.
     const formData = new FormData(e.target);
     const [firstName, ...lastName] = formData.get("name").split(" ");
-
-    const { error } = await supabase
-      .from("patients")
-      .update({
-        first_name: firstName,
-        last_name: lastName.join(" "),
-        email: formData.get("email"),
-        phone_number: formData.get("phone"),
-        date_of_birth: formData.get("dob"),
-        blood_type: formData.get("bloodType"),
-      })
-      .eq("id", currentPatientId);
-
-    if (!error) {
-      fetchUserData();
-      showToast("Profile updated successfully!");
-    }
+    setUserData({
+      name: `${firstName} ${lastName.join(" ")}`.trim(),
+      email: formData.get("email"),
+      phone: formData.get("phone"),
+      dob: formData.get("dob"),
+      bloodType: formData.get("bloodType"),
+      patientId: currentPatientId,
+    });
+    showToast("Profile updated successfully!");
   };
 
   const getUpcomingAppointment = () => {
@@ -377,7 +340,7 @@ const DashboardPage = () => {
               <div className="card">
                 <div className="card-header">
                   <h3>Upcoming Appointment</h3>
-                  {upcomingAppointment?.mode === "Video Call" ? (
+                  {upcomingAppointment?.mode === "video-call" ? (
                     <Video className="icon" />
                   ) : (
                     <Hospital className="icon" />

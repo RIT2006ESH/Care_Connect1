@@ -1,174 +1,168 @@
-<<<<<<< HEAD
-# 🩺 Care Connect
+# Care Connect
 
-A **modern healthcare management web app** that connects **patients, doctors, and admins** on one unified platform.
+Care Connect is a healthcare web application with:
 
-> **Care Connect** simplifies healthcare — from AI-powered symptom checking to appointment booking and health updates — all in one place.
+- A React frontend
+- A Flask ML backend for disease prediction
+- A Flask weather-based health notices service
 
----
+## Project Structure
 
-## 🌐 Live Demo  
-> Coming soon...
+- `frontend/` - React application (runs on `http://localhost:3000`)
+- `ml_backend/` - Disease prediction API (runs on `http://localhost:5000`)
+- `health notices/` - Health notices web service (runs on `http://127.0.0.1:5001`)
 
----
+## Prerequisites
 
-## 📋 Table of Contents
-- [Overview](#-overview)
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [UI Pages](#-ui-pages)
-- [Components](#-components)
-- [Installation](#-installation)
-- [Folder Structure](#-folder-structure)
-- [Contributing](#-contributing)
-- [License](#-license)
+Install the following on your machine:
 
----
+- Node.js 18+ and npm
+- Python 3.10+
 
-## 🧠 Overview
-
-**Care Connect** is designed to streamline digital healthcare by enabling:
-- **Patients** to check symptoms and book online/offline consultations  
-- **Doctors** to manage appointments and prescriptions  
-- **Admins** to monitor system activity and health advisories  
-
----
-
-## ✨ Features
-
-| Feature | Description |
-|----------|--------------|
-| 🧬 **AI Symptom Checker** | Enter symptoms to get instant AI-based insights |
-| 📅 **Book Appointments** | Schedule and manage consultations online/offline |
-| 📢 **Health Notices** | View verified government health advisories |
-| 👨‍⚕️ **Doctor Dashboard** | Manage patients, prescriptions, and availability |
-| 🧍‍♂️ **User Dashboard** | Track appointments, tips, and visit history |
-| ⚙️ **Admin Panel** | Manage doctors, notices, and user reviews |
-| 🌙 **Dark Mode** | Toggle between light/dark modes |
-
----
-
-## 🖼️ Theme & Design
-
-**Style:** Modern, clean, minimalistic  
-**Font:** [Inter](https://fonts.google.com/specimen/Inter) / [Poppins](https://fonts.google.com/specimen/Poppins)
-
-**🎨 Color Palette**
-| Role | Color | Hex |
-|------|--------|-----|
-| Primary | Teal | `#0D9488` |
-| Secondary | Light Teal | `#14B8A6` |
-| Accent | Orange | `#F97316` |
-| Background | Light Gray | `#F9FAFB` |
-| Text | Dark Gray | `#111827` |
-
----
-
-## 📑 UI Pages
-
-### 🏠 **Home Page**
-- Navbar: *Home, Doctors, Symptom Checker, Health Notices, Login/Signup*
-- Hero: *“Your One-Stop Health Assistant”*
-- Buttons: *Check Symptoms*, *Book Appointment*, *View Health Tips*
-- Features: *AI Symptom Checker*, *Book Appointments*, *Health Notices*
-- Footer: *About, Contact, Terms, Privacy Policy*
-
----
-
-### 👤 **User Dashboard**
-- Sidebar: *Dashboard, Appointments, Health History, Profile, Logout*
-- Cards: *Upcoming Appointment*, *Health Tips*, *Past Visits*
-
----
-
-### 👨‍⚕️ **Doctor Dashboard**
-- Sidebar: *Appointments, Patient History, Prescriptions, Settings*
-- Cards: *Today’s Appointments*, *Patient Details*, *Availability Toggle*
-
----
-
-### 🛠️ **Admin Dashboard**
-- Charts: *Total Doctors, Total Patients* (via Chart.js)
-- Cards: *Manage Doctors, Manage Notices, User Reviews*
-
----
-
-### 🤖 **Symptom Checker**
-- Chat UI: *Describe your symptoms and get instant feedback*
-- Elements: *Chat Window, Mic Input, Send Button*
-
----
-
-### 📰 **Health Notices Page**
-- Notice Board: *Health updates, advisories, tips*
-- Admin Access: *Add / Edit / Delete notices*
-
----
-
-## 🧩 Components
-- ✅ Responsive Navbar  
-- ✅ Sidebar Navigation  
-- ✅ Cards with Stats  
-- ✅ Pie Charts (via **Chart.js**)  
-- ✅ Buttons with Hover Animations  
-- ✅ Dark Mode Toggle  
-
----
-
-## ⚙️ Tech Stack
-
-**Frontend:**  
-- React.js / Next.js  
-- Tailwind CSS  
-- Chart.js  
-
-**Backend (planned or optional):**  
-- Node.js + Express  
-- MongoDB / Firebase  
-
-**AI / NLP (optional):**  
-- OpenAI API / Hugging Face Models  
-
----
-
-## 🚀 Installation
+Check versions:
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/care-connect.git
+node -v
+npm -v
+python --version
+```
 
-# Navigate to project folder
-cd care-connect
+## 1) Start the Frontend (React)
 
-# Install dependencies
+Open a terminal in the project root and run:
+
+```bash
+cd frontend
 npm install
+npm start
+```
 
-# Start the development server
-npm run dev
+Frontend URL:
 
-care-connect/
-├── public/
-│   ├── assets/              # Images & icons
-│   └── favicon.ico
-├── src/
-│   ├── components/          # Reusable components (Navbar, Sidebar, Cards, etc.)
-│   ├── pages/               # Main UI pages
-│   ├── styles/              # Global & theme styles
-│   ├── utils/               # Helper functions
-│   └── App.jsx
-├── package.json
-└── README.md
+- `http://localhost:3000`
 
-# Create new branch
-git checkout -b feature-name
+## 2) Start the ML Backend (Disease Predictor API)
 
-# Commit changes
-git commit -m "Added new feature"
+Open a second terminal in the project root and run:
 
-# Push and open PR
-git push origin feature-name
+```bash
+cd ml_backend
+```
 
-    
-=======
-# Care_Connect1
->>>>>>> c813841df52b9605f0dee3ec82261412ff049e67
+### Create and activate virtual environment (first time only)
+
+Windows (cmd):
+
+```bat
+python -m venv venv
+venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
+pip install flask flask-cors pandas numpy scikit-learn requests
+```
+
+Run the backend:
+
+```bash
+python app.py
+```
+
+Backend URL:
+
+- `http://localhost:5000`
+
+Health endpoint:
+
+- `http://localhost:5000/api/health`
+
+## 3) Start Health Notices Service (Optional but used by links)
+
+Open a third terminal in the project root and run:
+
+```bash
+cd "health notices"
+```
+
+### Create and activate virtual environment (first time only)
+
+Windows (cmd):
+
+```bat
+python -m venv venv
+venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the service:
+
+```bash
+python src\frontend.py
+```
+
+Service URL:
+
+- `http://127.0.0.1:5001`
+
+## Run All Services Together
+
+Use 3 terminals:
+
+1. Frontend: `frontend` -> `npm start`
+2. ML backend: `ml_backend` -> `python app.py`
+3. Health notices: `health notices` -> `python src\\frontend.py`
+
+## Common Issues
+
+### 1) `pip intall -r requirements.txt` fails
+
+You likely typed `intall` instead of `install`.
+
+Use:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2) Port already in use
+
+If port `3000`, `5000`, or `5001` is busy, stop the old process using that port and restart.
+
+### 3) Frontend cannot reach backend
+
+Make sure these are running:
+
+- ML backend on `http://localhost:5000`
+- Health notices on `http://127.0.0.1:5001`
+
+### 4) `Exit Code 127` in bash when running pip/python
+
+This usually means the command or path is invalid for the current shell.
+
+- In Git Bash, do not use `/c:/Users/...` paths.
+- Use either:
+  - `cd /c/Users/Asus/Desktop/Care-Connect`
+  - or open Command Prompt/PowerShell and use `C:\Users\Asus\Desktop\Care-Connect`
+- Run install commands from the correct folder:
+  - `ml_backend` for ML backend dependencies
+  - `health notices` for `requirements.txt`
+
+Example for health notices (Git Bash):
+
+```bash
+cd /c/Users/Asus/Desktop/Care-Connect/health\ notices
+python -m pip install -r requirements.txt
+python src/frontend.py
+```
+
+## Notes
+
+- The frontend reads Supabase keys from `frontend/.env`:
+- The frontend no longer depends on Supabase.

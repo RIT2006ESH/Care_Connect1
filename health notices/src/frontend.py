@@ -9,9 +9,12 @@ import pandas as pd
 from datetime import datetime, timedelta
 from predict import predict_weather, get_recommendations, load_config
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+
 print(f"Current working directory: {os.getcwd()}")
-template_path = '../templates'
-static_path = '../static'
+template_path = os.path.join(PROJECT_ROOT, 'templates')
+static_path = os.path.join(PROJECT_ROOT, 'static')
 print(f"Template folder path: {template_path}")
 print(f"Template folder exists: {os.path.exists(template_path)}")
 print(f"index.html exists: {os.path.exists(os.path.join(template_path, 'index.html'))}")
