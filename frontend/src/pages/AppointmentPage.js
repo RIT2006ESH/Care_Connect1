@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext"; // adjust path/hook name if yours differs
 import styles from "./AppointmentPage.module.css"; // Using CSS Modules
 
 // Helper function to create avatar URLs
@@ -11,6 +12,7 @@ const getAvatarUrl = (name) =>
 // Initial doctor data (can be fetched from an API)
 const initialDoctors = [
   {
+    id: "doc-sarah-johnson",
     name: "Dr. Sarah Johnson",
     specialty: "Cardiologist",
     rating: 4.9,
@@ -23,6 +25,7 @@ const initialDoctors = [
     availability: "Today, 2:00 PM - 6:00 PM",
   },
   {
+    id: "doc-michael-chen",
     name: "Dr. Michael Chen",
     specialty: "Dermatologist",
     rating: 4.8,
@@ -35,6 +38,7 @@ const initialDoctors = [
     availability: "Today, 10:00 AM - 4:00 PM",
   },
   {
+    id: "doc-emily-williams",
     name: "Dr. Emily Williams",
     specialty: "Pediatrician",
     rating: 4.9,
@@ -47,6 +51,7 @@ const initialDoctors = [
     availability: "Tomorrow, 9:00 AM - 1:00 PM",
   },
   {
+    id: "doc-david-brown",
     name: "Dr. David Brown",
     specialty: "Neurologist",
     rating: 4.7,
@@ -59,6 +64,7 @@ const initialDoctors = [
     availability: "Today, 3:00 PM - 7:00 PM",
   },
   {
+    id: "doc-lisa-anderson",
     name: "Dr. Lisa Anderson",
     specialty: "General Physician",
     rating: 4.8,
@@ -71,6 +77,7 @@ const initialDoctors = [
     availability: "Today, 1:00 PM - 5:00 PM",
   },
   {
+    id: "doc-james-wilson",
     name: "Dr. James Wilson",
     specialty: "Orthopedic Surgeon",
     rating: 4.9,
@@ -86,6 +93,7 @@ const initialDoctors = [
 
 const AppointmentPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth(); // logged-in patient — used to tag each booking
   const [doctors] = useState(initialDoctors);
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -140,6 +148,15 @@ const AppointmentPage = () => {
 
     const newAppointment = {
       id: Date.now(),
+      // --- patient identity: required so the doctor's appointment list
+      // can filter to "their" patients. Adjust field names on `user` if
+      // your AuthContext shapes it differently.
+      patientId: user?.id,
+      patientName: user?.name || user?.fullName || "Unknown Patient",
+      patientEmail: user?.email,
+      // --- doctor identity: also stamp an id, not just the display name,
+      // so filtering isn't dependent on exact name-string matching.
+      doctorId: selectedDoctor.id,
       doctor: selectedDoctor.name,
       specialty: selectedDoctor.specialty,
       date: selectedDate,
