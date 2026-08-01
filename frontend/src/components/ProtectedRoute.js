@@ -11,6 +11,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
+    // TEMP DEBUG — remove once the mismatch is found
+    console.log("ProtectedRoute blocked:", {
+      userRole: user?.role,
+      allowedRoles,
+    });
     return <Navigate to="/" replace />;
   }
 
