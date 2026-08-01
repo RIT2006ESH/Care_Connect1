@@ -111,6 +111,6 @@ export const buildSession = (user) => ({
 
 export const getDashboardPathForRole = (role) => {
   if (role === "doctor") return "/doctor-dashboard";
-  if (role === "admin") return "/admin-dashboard";
+  if (role === "admin") return "/admin/dashboard";
   return "/dashboard";
 };
