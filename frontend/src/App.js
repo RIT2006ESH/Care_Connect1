@@ -15,6 +15,8 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import { AuthProvider } from "./auth/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLayout from "./admin/AdminLayout";
+import { AdminDashboardPage, AdminModulePage } from "./admin/AdminPages";
 
 function App() {
   return (
@@ -53,13 +55,33 @@ function App() {
               }
             />
             <Route
-              path="admin-dashboard"
+              path="admin"
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminDashboard />
+                  <AdminLayout />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboardPage />} />
+              <Route path="users/doctors" element={<AdminModulePage moduleKey="doctors" />} />
+              <Route path="users/patients" element={<AdminModulePage moduleKey="patients" />} />
+              <Route path="users/staff" element={<AdminModulePage moduleKey="staff" />} />
+              <Route path="hospitals" element={<AdminModulePage moduleKey="hospitals" />} />
+              <Route path="appointments" element={<AdminModulePage moduleKey="appointments" />} />
+              <Route path="health-notices" element={<AdminModulePage moduleKey="notices" />} />
+              <Route path="emergency-alerts" element={<AdminModulePage moduleKey="alerts" />} />
+              <Route path="disease-analytics" element={<AdminModulePage moduleKey="diseaseAnalytics" />} />
+              <Route path="weather-monitoring" element={<AdminModulePage moduleKey="weatherMonitoring" />} />
+              <Route path="reports" element={<AdminModulePage moduleKey="reports" />} />
+              <Route path="notifications" element={<AdminModulePage moduleKey="notifications" />} />
+              <Route path="feedback-complaints" element={<AdminModulePage moduleKey="feedbackComplaints" />} />
+              <Route path="audit-logs" element={<AdminModulePage moduleKey="auditLogs" />} />
+              <Route path="roles-permissions" element={<AdminModulePage moduleKey="rolesPermissions" />} />
+              <Route path="security-center" element={<AdminModulePage moduleKey="securityCenter" />} />
+              <Route path="settings" element={<AdminModulePage moduleKey="settings" />} />
+            </Route>
+            <Route path="admin-dashboard" element={<AdminDashboard />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
