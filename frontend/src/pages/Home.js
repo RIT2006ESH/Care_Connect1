@@ -1,14 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext'; // adjust path/hook name if yours differs
 import './Home.css';
-
-// ---------------------------------------------------------------
-// Home.js
-// Page content only — Navbar and Footer come from Layout.js.
-// Content (hero copy, stats, feature cards, steps, testimonials)
-// is loaded from CONTENT_ENDPOINT with FALLBACK_DATA as a safety
-// net, so the page is never blank even if that API isn't live yet.
-// ---------------------------------------------------------------
 
 const CONTENT_ENDPOINT = '/api/landing-content';
 
@@ -49,6 +42,18 @@ const FALLBACK_DATA = {
 
 function initials(name) {
   return name.split(' ').filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+}
+
+// Maps a logged-in user's role to their dashboard route.
+// Adjust these paths to match your actual router config in App.js.
+const ROLE_DASHBOARD_ROUTES = {
+  doctor: '/doctor-dashboard',
+  patient: '/dashboard',
+  admin: '/admin-dashboard',
+};
+
+function getDashboardRoute(role) {
+  return ROLE_DASHBOARD_ROUTES[role] || '/dashboard';
 }
 
 // Counts a single stat value up from 0 once it scrolls into view.
@@ -177,6 +182,8 @@ function Testimonials({ list }) {
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useAuth(); // expects user.role to be 'doctor' | 'patient' | 'admin'
+  const dashboardRoute = getDashboardRoute(user?.role);
   const [data, setData] = useState(null); // null = still loading
 
   const loadContent = useCallback(async () => {
@@ -215,7 +222,7 @@ export default function Home() {
             </h2>
             <p className={`lede ${loading ? 'skeleton' : ''}`}>{content.hero.lede}</p>
             <div className="hero-actions">
-              <button className="btn-primary-lg" type="button" onClick={() => navigate('/dashboard')}>
+              <button className="btn-primary-lg" type="button" onClick={() => navigate(dashboardRoute)}>
                 <i className="fa-solid fa-table-cells-large" /> Go to dashboard
               </button>
               <button className="btn-ghost-lg" type="button" onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}>
@@ -335,7 +342,7 @@ export default function Home() {
               <h3>Your health, one tap away.</h3>
               <p>Jump into your dashboard to check symptoms, book a doctor, or catch up on notices.</p>
             </div>
-            <button className="btn-on-dark" type="button" onClick={() => navigate('/dashboard')}>
+            <button className="btn-on-dark" type="button" onClick={() => navigate(dashboardRoute)}>
               Go to dashboard
             </button>
           </div>
