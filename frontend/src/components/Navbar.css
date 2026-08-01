@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   right: 0;
-  background-color: var(--background);
+  background-color: var(--background, #F9FAFB);
   z-index: 1000;
 }
 
@@ -13,7 +13,26 @@
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
+  gap: 1.25rem;
+  flex-wrap: nowrap;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary, #0D9488);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.logo i {
+  margin-right: 0.5rem;
+  font-size: 1.8rem;
 }
 
 /* Menu Toggle Button */
@@ -30,11 +49,87 @@
   display: flex;
   list-style: none;
   gap: 2rem;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0 1rem;
+  opacity: 1;
+  visibility: visible;
+}
+
+.nav-links li {
+  display: flex;
+}
+
+.nav-links a {
+  color: var(--text, #111827);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+  position: relative;
+  white-space: nowrap;
+  opacity: 1;
+}
+
+.nav-links a:hover {
+  color: var(--primary, #0D9488);
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 50%;
+  background-color: var(--primary, #0D9488);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+.nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--text, #111827);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background-color: var(--border, #E5E7EB);
 }
 
 .nav-links.active {
   opacity: 1;
   transform: translateX(0);
+}
+
+@media (max-width: 1024px) {
+  .nav-links {
+    gap: 1.25rem;
+  }
+  .nav-buttons {
+    gap: 0.6rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -47,7 +142,7 @@
     top: 100%;
     left: 0;
     right: 0;
-    background-color: var(--background);
+    background-color: var(--background, #F9FAFB);
     flex-direction: column;
     align-items: center;
     padding: 1rem;
@@ -63,5 +158,11 @@
 
   .nav-buttons {
     display: none;
+  }
+
+  .nav-container {
+    display: flex;
+    padding: 1rem;
+    flex-wrap: nowrap;
   }
 }

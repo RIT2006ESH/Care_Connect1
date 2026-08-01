@@ -13,6 +13,7 @@ const Layout = () => {
     "/dashboard",
     "/doctor-dashboard",
     "/admin-dashboard",
+    "/admin",
     "/appointment",
   ].some((path) => location.pathname.startsWith(path));
 

@@ -2,11 +2,13 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import './Navbar.css'
 import { useAuth } from "../auth/AuthContext";
+
 const Navbar = ({ theme, toggleTheme }) => {
   const [isMenuOpen] = useState(false);
   const navbarRef = useRef(null);
   const navigate = useNavigate();
   const { isAuthenticated, user, signOut } = useAuth();
+
   useEffect(() => {
     const handleScroll = () => {
       if (navbarRef.current) {
@@ -20,6 +22,7 @@ const Navbar = ({ theme, toggleTheme }) => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
   const handleLoginClick = () => {
     navigate("/auth");
   };
@@ -28,6 +31,7 @@ const Navbar = ({ theme, toggleTheme }) => {
     signOut();
     navigate("/");
   };
+
   return (
     <nav className="navbar" ref={navbarRef}>
       <div className="nav-container">
@@ -56,7 +60,7 @@ const Navbar = ({ theme, toggleTheme }) => {
             <i className={theme === "dark" ? "fas fa-sun" : "fas fa-moon"}></i>
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <span style={{ color: "var(--text)", fontWeight: "500" }}>
+            <span style={{ color: "var(--text)", fontWeight: "500", whiteSpace: "nowrap" }}>
               {isAuthenticated ? `Welcome, ${user?.name?.split(" ")[0] || "User"}` : "Welcome"}
             </span>
           </div>
@@ -74,4 +78,5 @@ const Navbar = ({ theme, toggleTheme }) => {
     </nav>
   );
 };
+
 export default Navbar;
