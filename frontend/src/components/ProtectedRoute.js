@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
@@ -11,7 +11,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    // TEMP DEBUG — remove once the mismatch is found
+    // TEMP DEBUG remove once the mismatch is found
     console.log("ProtectedRoute blocked:", {
       userRole: user?.role,
       allowedRoles,
