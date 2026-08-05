@@ -1,6 +1,5 @@
 package com.careconnect.backend.dto;
 
-import com.careconnect.backend.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,5 +12,6 @@ public class AuthResponse {
     private Long id;
     private String name;
     private String email;
-    private Role role;
+    private String phone;
+    private String role; // "user" | "doctor" | "admin"
 }

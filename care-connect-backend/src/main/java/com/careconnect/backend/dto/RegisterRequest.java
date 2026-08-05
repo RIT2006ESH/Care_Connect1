@@ -1,6 +1,5 @@
 package com.careconnect.backend.dto;
 
-import com.careconnect.backend.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -16,10 +15,12 @@ public class RegisterRequest {
     @NotBlank
     private String password;
 
-    @NotBlank
-    private Role role; // PATIENT | DOCTOR | ADMIN
+    private String phone;
 
-    // Optional, only meaningful when role == DOCTOR
+    @NotBlank
+    private String role; // "user" | "doctor" | "admin" (case-insensitive)
+
+    // Optional, only meaningful when role == doctor
     private String specialty;
     private String about;
     private Integer experienceYears;

@@ -23,25 +23,36 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
+    private Role parseRole(String raw) {
+        try {
+            return Role.valueOf(raw.trim().toUpperCase());
+        } catch (Exception e) {
+            throw new BadRequestException("Invalid role: " + raw + " (expected user, doctor, or admin)");
+        }
+    }
+
     public AuthResponse register(RegisterRequest req) {
         if (userRepository.existsByEmail(req.getEmail())) {
             throw new BadRequestException("An account with this email already exists");
         }
 
+        Role role = parseRole(req.getRole());
+
         User user = User.builder()
                 .name(req.getName())
                 .email(req.getEmail())
                 .password(passwordEncoder.encode(req.getPassword()))
-                .role(req.getRole())
-                .specialty(req.getRole() == Role.DOCTOR ? req.getSpecialty() : null)
-                .about(req.getRole() == Role.DOCTOR ? req.getAbout() : null)
-                .experienceYears(req.getRole() == Role.DOCTOR ? req.getExperienceYears() : null)
+                .phone(req.getPhone())
+                .role(role)
+                .specialty(role == Role.DOCTOR ? req.getSpecialty() : null)
+                .about(role == Role.DOCTOR ? req.getAbout() : null)
+                .experienceYears(role == Role.DOCTOR ? req.getExperienceYears() : null)
                 .build();
 
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user);
-        return new AuthResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole());
+        return toResponse(user, token);
     }
 
     public AuthResponse login(LoginRequest req) {
@@ -49,9 +60,30 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
 
         User user = userRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new BadRequestException("Invalid email or password"));
+                .orElseThrow(() -> new BadRequestException("Invalid email, password, or role"));
+
+        // If the frontend sent a role (e.g. logging in via the "doctor" portal),
+        // reject if it doesn't match the account's actual role — mirrors the
+        // old findUserByCredentials(email, password, role) behavior.
+        if (req.getRole() != null && !req.getRole().isBlank()) {
+            Role requestedRole = parseRole(req.getRole());
+            if (user.getRole() != requestedRole) {
+                throw new BadRequestException("Invalid email, password, or role");
+            }
+        }
 
         String token = jwtUtil.generateToken(user);
-        return new AuthResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole());
+        return toResponse(user, token);
+    }
+
+    private AuthResponse toResponse(User user, String token) {
+        return AuthResponse.builder()
+                .token(token)
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole().name().toLowerCase())
+                .build();
     }
 }
