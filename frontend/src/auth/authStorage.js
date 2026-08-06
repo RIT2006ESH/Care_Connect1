@@ -1,32 +1,10 @@
-const USERS_KEY = "care-connect-users";
-const SESSION_KEY = "care-connect-session";
+// src/auth/authStorage.js
+// Session/token persistence for the browser. The actual user database
+// (create/find/verify) now lives on the backend — this file just keeps
+// the logged-in user's info and JWT around across page reloads.
 
-const seededUsers = [
-  {
-    id: "user-001",
-    role: "user",
-    name: "Jane Smith",
-    email: "jane@example.com",
-    password: "Password123!",
-    phone: "+1 555-010-2000",
-  },
-  {
-    id: "doctor-001",
-    role: "doctor",
-    name: "Dr. Sarah Johnson",
-    email: "doctor@example.com",
-    password: "Password123!",
-    phone: "+1 555-010-3000",
-  },
-  {
-    id: "admin-001",
-    role: "admin",
-    name: "Admin User",
-    email: "admin@example.com",
-    password: "Password123!",
-    phone: "+1 555-010-4000",
-  },
-];
+const SESSION_KEY = "care-connect-session";
+const TOKEN_KEY = "token"; // must match the key api.js reads in authHeaders()
 
 const safeParse = (value, fallback) => {
   try {
@@ -34,23 +12,6 @@ const safeParse = (value, fallback) => {
   } catch {
     return fallback;
   }
-};
-
-export const getUsers = () => {
-  if (typeof window === "undefined") return seededUsers;
-
-  const storedUsers = safeParse(window.localStorage.getItem(USERS_KEY), null);
-  if (Array.isArray(storedUsers) && storedUsers.length > 0) {
-    return storedUsers;
-  }
-
-  window.localStorage.setItem(USERS_KEY, JSON.stringify(seededUsers));
-  return seededUsers;
-};
-
-export const saveUsers = (users) => {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(USERS_KEY, JSON.stringify(users));
 };
 
 export const getSession = () => {
@@ -68,45 +29,29 @@ export const clearSession = () => {
   window.localStorage.removeItem(SESSION_KEY);
 };
 
-export const findUserByCredentials = (email, password, role) => {
-  const users = getUsers();
-  return users.find(
-    (user) =>
-      user.email.toLowerCase() === email.toLowerCase() &&
-      user.password === password &&
-      user.role === role
-  );
+export const getToken = () => {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(TOKEN_KEY);
 };
 
-export const createUser = ({ name, email, password, phone, role }) => {
-  const users = getUsers();
-  const existingUser = users.find(
-    (user) => user.email.toLowerCase() === email.toLowerCase()
-  );
-
-  if (existingUser) {
-    throw new Error("An account with this email already exists.");
-  }
-
-  const nextUser = {
-    id: `${role}-${Date.now()}`,
-    role,
-    name,
-    email,
-    password,
-    phone,
-  };
-
-  saveUsers([...users, nextUser]);
-  return nextUser;
+export const saveToken = (token) => {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(TOKEN_KEY, token);
 };
 
-export const buildSession = (user) => ({
-  id: user.id,
-  role: user.role,
-  name: user.name,
-  email: user.email,
-  phone: user.phone || "",
+export const clearToken = () => {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(TOKEN_KEY);
+};
+
+// Turns a backend AuthResponse into the session shape the rest of the
+// app already expects (same fields as before: id, role, name, email, phone).
+export const buildSession = (authResponse) => ({
+  id: authResponse.id,
+  role: authResponse.role,
+  name: authResponse.name,
+  email: authResponse.email,
+  phone: authResponse.phone || "",
 });
 
 export const getDashboardPathForRole = (role) => {
