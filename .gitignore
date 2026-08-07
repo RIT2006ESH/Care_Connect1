@@ -438,3 +438,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Maven
+**/target/
+*.class
