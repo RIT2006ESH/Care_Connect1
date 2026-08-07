@@ -24,7 +24,7 @@ public class AppointmentController {
     // Patient books an appointment. Patient identity comes from the JWT
     // (@AuthenticationPrincipal), never from the request body.
     @PostMapping
-    @PreAuthorize("hasRole('PATIENT')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<AppointmentResponse> book(@AuthenticationPrincipal User patient,
                                                       @Valid @RequestBody AppointmentRequest req) {
         return ResponseEntity.ok(appointmentService.book(patient, req));
@@ -46,7 +46,7 @@ public class AppointmentController {
 
     // Patient: today's + history combined (frontend splits by date vs today)
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('PATIENT','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<List<AppointmentResponse>> allForPatient(@PathVariable Long patientId) {
         return ResponseEntity.ok(appointmentService.allForPatient(patientId));
     }

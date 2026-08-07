@@ -21,7 +21,7 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @PostMapping
-    @PreAuthorize("hasRole('PATIENT')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ReviewResponse> leaveReview(@AuthenticationPrincipal User patient,
                                                         @Valid @RequestBody ReviewRequest req) {
         return ResponseEntity.ok(reviewService.leaveReview(patient, req));
@@ -29,7 +29,7 @@ public class ReviewController {
 
     // Used by both the doctor's own profile and the admin drill-down view
     @GetMapping("/doctor/{doctorId}")
-    @PreAuthorize("hasAnyRole('DOCTOR','ADMIN','PATIENT')")
+    @PreAuthorize("hasAnyRole('DOCTOR','ADMIN','USER')")
     public ResponseEntity<List<ReviewResponse>> reviewsForDoctor(@PathVariable Long doctorId) {
         return ResponseEntity.ok(reviewService.forDoctor(doctorId));
     }
