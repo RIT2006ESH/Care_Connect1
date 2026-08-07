@@ -36,11 +36,11 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    private String phone;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    private String phone;
 
     // --- Doctor-specific fields (null for patients/admins) ---
     private String specialty;
