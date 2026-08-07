@@ -19,7 +19,13 @@ function AuthPages() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // NOTE: these demo accounts were seeded into localStorage by the old mock
+  // auth system. Now that signIn/signUp hit the real backend, these emails
+  // won't exist until someone actually registers them via /api/auth/register.
+  // Either remove this section, or register these three accounts for real
+  // (e.g. via the register endpoint) so the "quick fill" buttons still work.
   const demoCredentials = useMemo(
     () => [
       { role: "user", email: "jane@example.com", password: "Password123!" },
@@ -55,8 +61,9 @@ function AuthPages() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     try {
       if (!formData.email || !formData.password) {
@@ -77,7 +84,8 @@ function AuthPages() {
           throw new Error("Please accept the terms and conditions.");
         }
 
-        signUp({
+        setIsSubmitting(true);
+        await signUp({
           name: formData.name.trim(),
           email: formData.email.trim(),
           password: formData.password,
@@ -85,7 +93,8 @@ function AuthPages() {
           role: currentRole,
         });
       } else {
-        signIn({
+        setIsSubmitting(true);
+        await signIn({
           email: formData.email.trim(),
           password: formData.password,
           role: currentRole,
@@ -95,7 +104,12 @@ function AuthPages() {
       resetForm();
       navigate(getDashboardPathForRole(currentRole), { replace: true });
     } catch (submitError) {
+      // Errors thrown by the backend (bad credentials, duplicate email,
+      // role mismatch, etc.) land here since signIn/signUp now reject
+      // their Promise instead of throwing synchronously.
       setError(submitError.message || "Authentication failed.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -332,6 +346,11 @@ function AuthPages() {
       cursor: "pointer",
       marginTop: "0.5rem",
       minHeight: "54px",
+      opacity: 1,
+    },
+    buttonDisabled: {
+      opacity: 0.65,
+      cursor: "not-allowed",
     },
     helperBox: {
       marginTop: "1rem",
@@ -657,8 +676,21 @@ function AuthPages() {
                   )}
                 </div>
 
-                <button type="submit" style={styles.button}>
-                  {isSignIn ? "Sign In" : "Create Account"}
+                <button
+                  type="submit"
+                  style={{
+                    ...styles.button,
+                    ...(isSubmitting ? styles.buttonDisabled : {}),
+                  }}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting
+                    ? isSignIn
+                      ? "Signing in..."
+                      : "Creating account..."
+                    : isSignIn
+                    ? "Sign In"
+                    : "Create Account"}
                 </button>
               </form>
 
